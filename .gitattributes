@@ -1,0 +1,12 @@
+# Metin dosyaları depoda ve her bilgisayarda LF satır sonuyla tutulur.
+# Windows'ta yazılan betikler Linux konteynerlerinde bu sayede bozulmadan çalışır.
+* text=auto eol=lf
+
+# İkili dosyalara asla dokunulmaz.
+*.png    binary
+*.jpg    binary
+*.pdf    binary
+*.pcap   binary
+*.pcapng binary
+*.zip    binary
+*.mp4    binary

@@ -1,0 +1,15 @@
+{
+  "_aciklama": "Kısa deneme matrisi: ortam_yerel.json ile birkaç dakikada tüm akışı (koşturma + analiz) dener. Çıkan sayılar gerçek ölçüm değildir.",
+  "deney": "deneme",
+  "kisa_ad": "dn",
+  "modlar": ["tcp", "dtn"],
+  "tekrar": 2,
+  "mesaj": {"adet": 20, "boyut": 1024, "aralik": 0.05},
+  "nokta_etiketi": "g{g1}",
+  "varsayilan": {"g2": 0.05},
+  "noktalar": [
+    {"g1": 0.1},
+    {"g1": 1}
+  ],
+  "sure": {"en_az": 15, "gecikme_carpani": 4, "ek": 10}
+}

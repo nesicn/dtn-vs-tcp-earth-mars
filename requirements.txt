@@ -1,0 +1,8 @@
+# Trafik betikleri (trafik/) ve deney koşturucu (deney/) yalnızca Python standart
+# kütüphanesini kullanır. DTN betikleri ek olarak ud3tn-utils ister.
+ud3tn-utils>=0.15
+
+# Analiz (analiz/) ve grafikler
+pandas>=1.5
+numpy>=1.23
+matplotlib>=3.6

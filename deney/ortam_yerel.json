@@ -1,0 +1,35 @@
+{
+  "_aciklama": "Docker olmadan, tek bilgisayarda tüm akışı denemek için. Gecikme ve pencere yoktur; DTN modunda uD3TN yerine testler/sahte_ud3tn.py kullanılır ve her bundle'ı g1 saniye bekletir. Bu ortamda üretilen sayılar GERÇEK ÖLÇÜM DEĞİLDİR, yalnızca betiklerin doğru çalıştığını gösterir.",
+  "ad": "yerel",
+  "python": null,
+  "proje_kok": null,
+  "baslama_payi_s": 2,
+  "dugumler": {
+    "dunya": {"komut_oneki": []},
+    "arac": {"komut_oneki": []}
+  },
+  "tcp": {
+    "alici_host": "127.0.0.1",
+    "port": 5000,
+    "gonderici_ek_argumanlar": []
+  },
+  "dtn": {
+    "dunya_aap2": "127.0.0.1:4242",
+    "arac_aap2": "127.0.0.1:4242",
+    "hedef_eid": "dtn://sahte.dtn/sink",
+    "ajan_id": "sink"
+  },
+  "yakalama": null,
+  "kancalar": {
+    "kosu_oncesi": [],
+    "arka_plan": [
+      {
+        "ad": "sahte_ud3tn",
+        "modlar": ["dtn"],
+        "komut": ["{python}", "{kok}/testler/sahte_ud3tn.py", "--port", "4242", "--gecikme", "{g1}"],
+        "bekle_s": 1.0
+      }
+    ],
+    "kosu_sonrasi": []
+  }
+}

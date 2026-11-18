@@ -1,0 +1,16 @@
+{
+  "_aciklama": "Deney 2: örtüşmeyen pencereler. Dünya-uydu ve uydu-araç pencereleri hiçbir anda aynı anda açık değildir; uçtan uca yol hiç kurulmaz. Boşluk (10 s) Dünya-uydu gecikmesinden (1 s) uzundur. Periyot = 2 x (pencere + boşluk). Mesajlar t0'da, ilk link1 penceresinin başında üretilir.",
+  "deney": "deney2",
+  "kisa_ad": "d2",
+  "modlar": ["tcp", "dtn"],
+  "tekrar": 5,
+  "mesaj": {"adet": 50, "boyut": 1024, "aralik": 0.1},
+  "nokta_etiketi": "p{pencere}",
+  "varsayilan": {"g1": 1, "g2": 0.05, "bosluk": 10, "periyot_sayisi": 3},
+  "noktalar": [
+    {"pencere": 10},
+    {"pencere": 20},
+    {"pencere": 30}
+  ],
+  "sure": {"periyot_carpani": 2, "ek": 15}
+}

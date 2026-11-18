@@ -1,0 +1,91 @@
+{
+  "_aciklama": "Asıl deney ortamı: Elif'in Docker Compose düzeni (dunya, aktarici, arac). Koşturucu host'ta (netem testini geçen Mac'te) çalışır ve konteynerlere docker exec ile komut verir. 'BAKILACAK' ile işaretli değerler Elif ve Azra'nın kurulumuna göre doğrulanmalıdır. Ayrıntılar: docs/ortam_ayarlari.md",
+  "ad": "docker",
+  "python": "python3",
+  "proje_kok": "/proje",
+  "baslama_payi_s": 10,
+  "dugumler": {
+    "dunya": {"komut_oneki": ["docker", "exec", "dunya"]},
+    "arac": {"komut_oneki": ["docker", "exec", "arac"]}
+  },
+  "arayuzler": {
+    "_aciklama": "BAKILACAK (Elif): her konteynerde 'ip -br addr' ile hangi arayüzün hangi linke bağlı olduğunu doğrula.",
+    "dunya_link1": "eth0",
+    "aktarici_link1": "eth0",
+    "aktarici_link2": "eth1",
+    "arac_link2": "eth0"
+  },
+  "tcp": {
+    "_aciklama": "BAKILACAK (Elif): arac konteynerinin link2 IP adresi.",
+    "alici_host": "10.0.2.3",
+    "port": 5000,
+    "gonderici_ek_argumanlar": []
+  },
+  "dtn": {
+    "_aciklama": "BAKILACAK (Azra): her düğümün AAP2 portu ve aracın düğüm EID'si.",
+    "dunya_aap2": "localhost:4242",
+    "arac_aap2": "localhost:4242",
+    "hedef_eid": "dtn://arac.dtn/sink",
+    "ajan_id": "sink"
+  },
+  "yakalama": {
+    "_aciklama": "Aktarıcının iki link arayüzündeki tüm trafik tek dosyaya yazılır (-i any: her link iletimi bir kez sayılır). tcpdump ve procps aktarıcıda kurulu olmalı.",
+    "baslat": "docker exec -d aktarici tcpdump -i any -U -w {kosu_dizini_dugum}/hat.pcap not host 127.0.0.1",
+    "durdur": "docker exec aktarici pkill -INT -x tcpdump",
+    "bekle_s": 1.5
+  },
+  "kancalar": {
+    "kosu_oncesi": [
+      {
+        "_aciklama": "Deney 1 (takvimsiz): linkler hep açık, yalnızca gecikme. Her linkin iki ucuna da uygulanır.",
+        "takvimli": false,
+        "komut": "docker exec dunya tc qdisc replace dev {arayuz[dunya_link1]} root netem delay {g1_ms}ms limit 100000"
+      },
+      {
+        "takvimli": false,
+        "komut": "docker exec aktarici tc qdisc replace dev {arayuz[aktarici_link1]} root netem delay {g1_ms}ms limit 100000"
+      },
+      {
+        "takvimli": false,
+        "komut": "docker exec aktarici tc qdisc replace dev {arayuz[aktarici_link2]} root netem delay {g2_ms}ms limit 100000"
+      },
+      {
+        "takvimli": false,
+        "komut": "docker exec arac tc qdisc replace dev {arayuz[arac_link2]} root netem delay {g2_ms}ms limit 100000"
+      },
+      {
+        "_aciklama": "BAKILACAK (Azra): DTN koşularından önce uD3TN düğümlerini temiz başlat (önceki koşudan kalan bundle'lar silinsin). Komutu kendi kurulumuna göre yaz ve devre_disi'yi kaldır.",
+        "devre_disi": true,
+        "modlar": ["dtn"],
+        "komut": "docker compose restart dunya aktarici arac",
+        "zaman_asimi_s": 120
+      },
+      {
+        "_aciklama": "BAKILACAK (Azra): Deney 2'de takvim.csv'yi uD3TN kontaklarına çeviren betik. Argüman adlarını kendi betiğine göre düzelt ve devre_disi'yi kaldır. {t0} mutlak başlangıç zamanıdır (Unix saniye).",
+        "devre_disi": true,
+        "takvimli": true,
+        "modlar": ["dtn"],
+        "komut": "python3 {kok}/dtn_yapilandirma/takvim_yukle.py --takvim {takvim} --t0 {t0}"
+      }
+    ],
+    "arka_plan": [
+      {
+        "_aciklama": "BAKILACAK (Elif): Deney 2'de linkleri takvime göre açıp kapatan betik. Koşu boyunca çalışır, koşu bitince durdurulur. Argüman adlarını kendi betiğine göre düzelt ve devre_disi'yi kaldır.",
+        "devre_disi": true,
+        "takvimli": true,
+        "ad": "contact_controller",
+        "komut": "python3 {kok}/ag/contact_controller.py --takvim {takvim} --t0 {t0}",
+        "bekle_s": 1.0
+      }
+    ],
+    "kosu_sonrasi": [
+      {
+        "_aciklama": "Linkleri gecikmesiz ve açık hale getir. Kural yoksa tc hata verir; bu yalnızca uyarı olarak kaydedilir.",
+        "komut": "docker exec dunya tc qdisc del dev {arayuz[dunya_link1]} root"
+      },
+      {"komut": "docker exec aktarici tc qdisc del dev {arayuz[aktarici_link1]} root"},
+      {"komut": "docker exec aktarici tc qdisc del dev {arayuz[aktarici_link2]} root"},
+      {"komut": "docker exec arac tc qdisc del dev {arayuz[arac_link2]} root"}
+    ]
+  }
+}

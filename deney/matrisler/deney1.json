@@ -1,0 +1,21 @@
+{
+  "_aciklama": "Deney 1: TCP hangi gecikmede çalışamaz hale geliyor? Linkler sürekli açık, Dünya-uydu tek yön gecikmesi kademeli artar. Tüm değerler ölçeklidir (gerçek 3-22 dakika yerine saniyeler). TCP'nin çöktüğü aralık görülünce o aralığa ara noktalar eklenebilir (örn. 50, 60, 70).",
+  "deney": "deney1",
+  "kisa_ad": "d1",
+  "modlar": ["tcp", "dtn"],
+  "tekrar": 5,
+  "mesaj": {"adet": 50, "boyut": 1024, "aralik": 0.1},
+  "nokta_etiketi": "g{g1}",
+  "varsayilan": {"g2": 0.05},
+  "noktalar": [
+    {"g1": 0.1},
+    {"g1": 1},
+    {"g1": 5},
+    {"g1": 10},
+    {"g1": 20},
+    {"g1": 40},
+    {"g1": 80},
+    {"g1": 160}
+  ],
+  "sure": {"en_az": 90, "gecikme_carpani": 4, "ek": 60}
+}
