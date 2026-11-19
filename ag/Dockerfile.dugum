@@ -1,0 +1,8 @@
+# dunya ve arac: trafik betikleri + ud3tn-utils (AAP2 istemcisi).
+# Azra'nın µD3TN imajı hazır olunca bu dosya onunla birleştirilebilir.
+FROM python:3.11-slim
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends iproute2 procps iputils-ping \
+ && rm -rf /var/lib/apt/lists/* \
+ && pip install --no-cache-dir ud3tn-utils
+WORKDIR /proje
