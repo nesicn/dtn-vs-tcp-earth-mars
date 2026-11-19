@@ -193,6 +193,25 @@ class Kosturucu:
                       else str(KOK / betik))
         return onek + [self.python, betik_yolu] + [str(a) for a in argumanlar]
 
+    @staticmethod
+    def _aap2_erisimi(dtn: Dict, dugum: str) -> List[str]:
+        """Seçilen düğümün AAP2 taşıma türünü komut satırı argümanına çevirir.
+
+        Yerel UNIX soketi tercih edilir; TCP de eski ortam dosyalarıyla geriye
+        dönük uyumluluk için desteklenir. Bir düğüm için ikisini birden
+        tanımlamak belirsiz olduğundan hata verir.
+        """
+        soket = dtn.get(f"{dugum}_aap2_soket")
+        tcp = dtn.get(f"{dugum}_aap2")
+        if soket and tcp:
+            raise ValueError(
+                f"dtn.{dugum} için AAP2 soketi veya TCP adresinden yalnızca biri tanımlanmalı")
+        if soket:
+            return ["--aap2-soket", str(soket)]
+        if tcp:
+            return ["--aap2-tcp", str(tcp)]
+        raise ValueError(f"dtn.{dugum}_aap2_soket veya dtn.{dugum}_aap2 tanımlanmalı")
+
     def _degiskenler(self, kosu: Dict, dizin: Path, t0: float,
                      takvim_yolu: Optional[Path]) -> Dict[str, object]:
         p = kosu["parametreler"]
@@ -345,11 +364,13 @@ class Kosturucu:
                     + [str(a) for a in tcp.get("gonderici_ek_argumanlar", [])])
             else:
                 alici_komut = self._dugum_komutu("arac", "trafik/dtn_alici.py", ortak_arg + [
-                    "--aap2-tcp", dtn["arac_aap2"], "--ajan-id", dtn.get("ajan_id", "sink"),
+                    *self._aap2_erisimi(dtn, "arac"),
+                    "--ajan-id", dtn.get("ajan_id", "sink"),
                     "--sure", p["sure"] + ALICI_EK_SURE_S, "--cikti", dizin_dugum])
                 gonderici_komut = self._dugum_komutu(
                     "dunya", "trafik/dtn_gonderici.py", ortak_arg + [
-                        "--aap2-tcp", dtn["dunya_aap2"], "--hedef-eid", dtn["hedef_eid"],
+                        *self._aap2_erisimi(dtn, "dunya"),
+                        "--hedef-eid", dtn["hedef_eid"],
                         "--boyut", p["boyut"], "--aralik", p["aralik"],
                         "--sure", p["sure"], "--cikti", dizin_dugum])
 
