@@ -9,7 +9,7 @@
     "arac": {"komut_oneki": ["docker", "exec", "arac"]}
   },
   "arayuzler": {
-    "_aciklama": "DOĞRULANDI (Elif, 19.11.2026): 'ip -br addr' çıktısına göre. link1 = 10.0.1.0/24, link2 = 10.0.2.0/24. Docker arayüz sırasını garanti etmez; compose yeniden kurulursa tekrar kontrol edin.",
+    "_aciklama": "DOĞRULANDI (Elif, 19.11.2026): adlar docker-compose.yml'de interface_name ile sabit. link1 = 10.0.1.0/24, link2 = 10.0.2.0/24. Her koşudan önce ag/arayuz_dogrula.py denetler.",
     "dunya_link1": "eth0",
     "aktarici_link1": "eth0",
     "aktarici_link2": "eth1",
@@ -36,6 +36,10 @@
   },
   "kancalar": {
     "kosu_oncesi": [
+      {
+        "_aciklama": "Elif: her koşudan önce arayüzlerin doğru linke bağlı olduğunu denetler. Yanlışsa koşu hatalı sayılır (gecikme yanlış linke uygulanıp sonuçlar sessizce bozulmasın).",
+        "komut": ["python3", "{kok}/ag/arayuz_dogrula.py", "--ortam", "{kok}/deney/ortam_docker.json"]
+      },
       {
         "_aciklama": "Deney 1 (takvimsiz): linkler hep açık, yalnızca gecikme. Her linkin iki ucuna da uygulanır.",
         "takvimli": false,
