@@ -9,14 +9,14 @@
     "arac": {"komut_oneki": ["docker", "exec", "arac"]}
   },
   "arayuzler": {
-    "_aciklama": "BAKILACAK (Elif): her konteynerde 'ip -br addr' ile hangi arayüzün hangi linke bağlı olduğunu doğrula.",
+    "_aciklama": "DOĞRULANDI (Elif, 19.11.2026): 'ip -br addr' çıktısına göre. link1 = 10.0.1.0/24, link2 = 10.0.2.0/24. Docker arayüz sırasını garanti etmez; compose yeniden kurulursa tekrar kontrol edin.",
     "dunya_link1": "eth0",
     "aktarici_link1": "eth0",
     "aktarici_link2": "eth1",
     "arac_link2": "eth0"
   },
   "tcp": {
-    "_aciklama": "BAKILACAK (Elif): arac konteynerinin link2 IP adresi.",
+    "_aciklama": "DOĞRULANDI (Elif, 19.11.2026): arac konteynerinin link2 IP adresi (docker-compose.yml'de sabit).",
     "alici_host": "10.0.2.3",
     "port": 5000,
     "gonderici_ek_argumanlar": []
@@ -70,11 +70,11 @@
     ],
     "arka_plan": [
       {
-        "_aciklama": "BAKILACAK (Elif): Deney 2'de linkleri takvime göre açıp kapatan betik. Koşu boyunca çalışır, koşu bitince durdurulur. Argüman adlarını kendi betiğine göre düzelt ve devre_disi'yi kaldır.",
-        "devre_disi": true,
+        "_aciklama": "DOĞRULANDI (Elif, 19.11.2026): Deney 2'de linkleri takvime göre açıp kapatan betik (ag/contact_controller.py). Koşu boyunca çalışır; takvim bitince linkleri kapalı tutar, SIGTERM'de açık bırakarak çıkar.",
         "takvimli": true,
         "ad": "contact_controller",
-        "komut": "python3 {kok}/ag/contact_controller.py --takvim {takvim} --t0 {t0}",
+        "_liste_neden": "Komut liste biçiminde: proje yolunda boşluk olsa da (ör. 'Application Support') parçalar bölünmez.",
+        "komut": ["python3", "{kok}/ag/contact_controller.py", "--takvim", "{takvim}", "--t0", "{t0}"],
         "bekle_s": 1.0
       }
     ],
