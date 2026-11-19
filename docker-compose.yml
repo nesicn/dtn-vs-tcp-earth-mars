@@ -1,0 +1,67 @@
+# Topoloji: dunya --(link1)-- aktarici --(link2)-- arac
+# Sorumlu: Elif. Ayrıntılar: docs/ortam_ayarlari.md
+#
+#   link1 = 10.0.1.0/24  (Dünya-uydu)   dunya 10.0.1.2   aktarici 10.0.1.3
+#   link2 = 10.0.2.0/24  (uydu-araç)    aktarici 10.0.2.2  arac 10.0.2.3
+#
+# Docker her ağın .1 adresini kendi ağ geçidine ayırır, bu yüzden düğümler .2'den başlar.
+# dunya ve arac karşı ağa aktarici üzerinden gider (host üzerinden kestirme yol yok).
+#
+# MAC adresleri sabit, komşular kalıcı (permanent) ARP kaydıyla tanımlı. Neden: Deney 2'de
+# kapalı link = netem "loss 100%", bu ARP paketlerini de düşürür. Kalıcı kayıt olmazsa
+# pencere açıldığında ilk paket önce ARP çözümlemesini bekler (~2 x gecikme) ve ölçüm bozulur.
+#   dunya    link1 02:00:00:00:01:02
+#   aktarici link1 02:00:00:00:01:03   link2 02:00:00:00:02:02
+#   arac     link2 02:00:00:00:02:03
+# Komşu kayıtlarını ag/komsu_ayarla.sh kurar.
+#
+# Arayüz adları interface_name ile sabit (Docker Engine 28.1+, Compose 2.36+). Neden: Docker
+# arayüz sırasını garanti etmez; aktarici'de eth0/eth1 yeniden kurulumda yer değiştirebilir ve
+# netem gecikmesi yanlış linke uygulanır. deney/ortam_docker.json'daki "arayuzler" bu adlara bağlı:
+#   dunya eth0 = link1 · aktarici eth0 = link1, eth1 = link2 · arac eth0 = link2
+
+services:
+  dunya:
+    build: {context: ag, dockerfile: Dockerfile.dugum}
+    container_name: dunya
+    hostname: dunya
+    cap_add: [NET_ADMIN]
+    volumes: ["./:/proje"]
+    networks:
+      link1: {ipv4_address: 10.0.1.2, mac_address: "02:00:00:00:01:02", interface_name: eth0}
+    command: ["sh", "/proje/ag/komsu_ayarla.sh", "dunya"]
+    depends_on: [aktarici]
+
+  aktarici:
+    build: {context: ag, dockerfile: Dockerfile.aktarici}
+    container_name: aktarici
+    hostname: aktarici
+    cap_add: [NET_ADMIN]
+    sysctls:
+      net.ipv4.ip_forward: 1
+    volumes: ["./:/proje"]
+    networks:
+      link1: {ipv4_address: 10.0.1.3, mac_address: "02:00:00:00:01:03", interface_name: eth0}
+      link2: {ipv4_address: 10.0.2.2, mac_address: "02:00:00:00:02:02", interface_name: eth1}
+    command: ["sh", "/proje/ag/komsu_ayarla.sh", "aktarici"]
+
+  arac:
+    build: {context: ag, dockerfile: Dockerfile.dugum}
+    container_name: arac
+    hostname: arac
+    cap_add: [NET_ADMIN]
+    volumes: ["./:/proje"]
+    networks:
+      link2: {ipv4_address: 10.0.2.3, mac_address: "02:00:00:00:02:03", interface_name: eth0}
+    command: ["sh", "/proje/ag/komsu_ayarla.sh", "arac"]
+    depends_on: [aktarici]
+
+networks:
+  link1:
+    driver: bridge
+    ipam:
+      config: [{subnet: 10.0.1.0/24}]
+  link2:
+    driver: bridge
+    ipam:
+      config: [{subnet: 10.0.2.0/24}]
