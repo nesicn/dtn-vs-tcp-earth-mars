@@ -1,0 +1,57 @@
+{
+  "_aciklama": "A1: Dünya ve Araç arasında doğrudan iki düğümlü µD3TN ortamı",
+  "ad": "a1",
+  "python": "python3",
+  "proje_kok": "/proje",
+  "baslama_payi_s": 10,
+  "dugumler": {
+    "dunya": {
+      "komut_oneki": ["docker", "exec", "dunya-a1"]
+    },
+    "arac": {
+      "komut_oneki": ["docker", "exec", "arac-a1"]
+    }
+  },
+  "dtn": {
+    "dunya_aap2": "localhost:4242",
+    "arac_aap2": "localhost:4242",
+    "hedef_eid": "dtn://arac.dtn/sink",
+    "ajan_id": "sink"
+  },
+  "kancalar": {
+    "kosu_oncesi": [
+      {
+        "_aciklama": "A1 düğümlerini yeniden başlat",
+        "modlar": ["dtn"],
+        "komut": [
+          "sh",
+          "-c",
+          "docker restart dunya-a1 arac-a1 >/dev/null && sleep 3"
+        ],
+        "zaman_asimi_s": 120
+      },
+      {
+        "_aciklama": "Dünya'dan Araç'a doğrudan DTN bağlantısı tanımla",
+        "modlar": ["dtn"],
+        "takvimli": false,
+        "komut": [
+          "docker",
+          "exec",
+          "dunya-a1",
+          "aap2-config",
+          "--tcp",
+          "127.0.0.1",
+          "4242",
+          "--schedule",
+          "1",
+          "86400",
+          "1000000000",
+          "-r",
+          "dtn://arac.dtn/",
+          "dtn://arac.dtn/",
+          "mtcp:10.0.3.3:4226"
+        ]
+      }
+    ]
+  }
+}
