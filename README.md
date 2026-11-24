@@ -54,7 +54,9 @@ betiklerin ve analizin doğru çalıştığını gösterir. Grafikler bu durumda
 
 Koşturucu, `netem` testini geçen bilgisayarda (host'ta) çalışır ve konteynerlere
 `docker exec` ile komut verir. Önce `docs/ortam_ayarlari.md`'deki gereksinimler
-karşılanmalı ve `deney/ortam_docker.json`'daki `BAKILACAK` değerleri doğrulanmalıdır.
+karşılanmalı; Compose ve DTN ortam ayarları güncel `main` yapılandırmasıyla
+eşleştirilmelidir. Koşulardan önce `docker compose config` ve aşağıdaki `--kuru`
+çıktısı kontrol edilmelidir.
 
 ```bash
 # Önce ne çalıştırılacağını gör (hiçbir şey çalıştırmaz)
@@ -63,8 +65,10 @@ python3 deney/run_experiment.py --ortam deney/ortam_docker.json --matris deney/m
 # Tek bir koşuyla dene
 python3 deney/run_experiment.py --ortam deney/ortam_docker.json --matris deney/matrisler/deney1.json --kosu d1_tcp_g1_t1
 
-# Tüm Deney 1 (80 koşu) ve Deney 2 (30 koşu)
+# Tam Deney 1 (80 koşu)
 python3 deney/run_experiment.py --ortam deney/ortam_docker.json --matris deney/matrisler/deney1.json
+
+# Tam Deney 2 (30 koşu): 10 s penceredeki DTN teslim oranı incelendikten sonra çalıştır
 python3 deney/run_experiment.py --ortam deney/ortam_docker.json --matris deney/matrisler/deney2.json
 
 # Analiz ve grafikler
@@ -137,8 +141,11 @@ en küçük ve en büyük; gecikme için koşu medyanlarının medyanı.
 
 ## Sınırlılıklar ve doğrulanmamış noktalar
 
-- Betikler yalnızca yerelde ve µD3TN taklidiyle test edildi. Gerçek µD3TN ve `netem`
-  ile ilk çalıştırma Docker ortamı hazır olunca yapılmalı.
+- Otomatik yazılım testleri yerelde ve µD3TN AAP2 taklidiyle çalışır. Gerçek üç düğümlü
+  µD3TN ve `netem` ortamında ilk smoke koşuları tamamlandı; tam deney matrisleri henüz
+  tamamlanmadı. Tek koşuluk sonuçlar nihai ölçüm olarak değerlendirilmemelidir.
+- Deney 2'nin 10 s pencere koşulunda bildirilen %38 DTN teslim oranının nedeni
+  incelenmektedir. Tam Deney 2 matrisi bu inceleme tamamlanana kadar bekletilmelidir.
 - µD3TN'in düğümler arası taşıma katmanları TCP tabanlıdır; çok yüksek gecikmede DTN
   bağlantısı da TCP zaman aşımlarına takılabilir (yol haritası bölüm 2).
 - `testler/sahte_ud3tn.py` bir DTN uygulaması değildir, deneylerde kullanılmaz.
