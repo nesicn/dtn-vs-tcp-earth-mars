@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """Load link contact windows into the relevant µD3TN node via docker exec.
 
@@ -9,18 +10,30 @@ from __future__ import annotations
 
 import argparse
 import csv
-import math
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-# The first link is configured on dunya (dunya -> aktarici).
-# The second link is configured on aktarici (aktarici -> arac).
 LINK_TO_CONTAINER = {
     "link1": "dunya",
     "link2": "aktarici",
 }
+
+# Contact peer: (EID, CLA address, reachable EIDs)
+LINK_TO_PEER = {
+    "link1": (
+        "dtn://aktarici.dtn/",
+        "mtcp:10.0.1.3:4225",
+        ["dtn://arac.dtn/"],
+    ),
+    "link2": (
+        "dtn://arac.dtn/",
+        "mtcp:10.0.2.3:4226",
+        [],
+    ),
+}
+
 AAP2_HOST = "127.0.0.1"
 AAP2_PORT = "4242"
 DEFAULT_BITRATE = "1000000000"
@@ -41,25 +54,36 @@ def load_rows(csv_path: Path):
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--takvim", required=True, help="Takvim CSV dosyası")
-    parser.add_argument("--t0", required=True, type=float, help="Deney başlangıç Unix zamanı")
-    parser.add_argument("--bitrate", default=DEFAULT_BITRATE, help="aap2-config bitrate değeri")
+    parser.add_argument(
+        "--t0", required=True, type=float,
+        help="Deney başlangıç Unix zamanı"
+    )
+    parser.add_argument(
+        "--bitrate", default=DEFAULT_BITRATE,
+        help="aap2-config bitrate değeri"
+    )
     args = parser.parse_args()
 
     rows = load_rows(Path(args.takvim))
+
     for row in rows:
         link = row["link"].strip()
         if link not in LINK_TO_CONTAINER:
-            raise ValueError(f"Bilinmeyen link: {link!r}; beklenen: link1 veya link2")
+            raise ValueError(
+                f"Bilinmeyen link: {link!r}; beklenen: link1 veya link2"
+            )
 
         start_s = float(row["baslangic_s"])
         end_s = float(row["bitis_s"])
-        if end_s <= start_s:
-            raise ValueError(f"{link}: bitis_s, baslangic_s değerinden büyük olmalı")
 
-        # µD3TN aap2-config expects an offset relative to the current time,
-        # not an absolute Unix timestamp.
-        start_offset = math.ceil(args.t0 + start_s - time.time())
-        duration = end_s - start_s
+        if end_s <= start_s:
+            raise ValueError(
+                f"{link}: bitis_s, baslangic_s değerinden büyük olmalı"
+            )
+
+        start_offset = round(args.t0 + start_s - time.time())
+        duration = int(round(end_s - start_s))
+
         if start_offset < 0:
             print(
                 f"UYARI: {link} penceresinin başlangıcı geçmişte; "
@@ -68,12 +92,20 @@ def main() -> int:
             )
 
         container = LINK_TO_CONTAINER[link]
+        peer_eid, peer_cla, reaches = LINK_TO_PEER[link]
+
         cmd = [
             "docker", "exec", container,
             "aap2-config",
             "--tcp", AAP2_HOST, AAP2_PORT,
-            "--schedule", str(start_offset), str(duration), str(args.bitrate),
+            peer_eid, peer_cla,
+            "--schedule", str(start_offset), str(duration),
+            str(args.bitrate),
         ]
+
+        for eid in reaches:
+            cmd += ["-r", eid]
+
         print("Çalıştırılıyor:", " ".join(cmd), flush=True)
         subprocess.run(cmd, check=True)
 
