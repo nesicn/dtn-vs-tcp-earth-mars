@@ -76,7 +76,7 @@
         "komut": "docker exec arac tc qdisc replace dev {arayuz[arac_link2]} root netem delay {g2_ms}ms limit 100000"
       },
       {
-        "_aciklama": "BAKILACAK (Azra): Deney 2'de takvim.csv'yi uD3TN kontaklarına çeviren betik. Argüman adlarını kendi betiğine göre düzelt ve devre_disi'yi kaldır. {t0} mutlak başlangıç zamanıdır (Unix saniye).",
+        "_aciklama": "DOĞRULANDI (Azra, 24.11.2026): Deney 2 takvim.csv dosyasını µD3TN kontaklarına yükler. Gerçek d2_dtn_p20_t1 koşusunda başarıyla çalıştı.",
         "takvimli": true,
         "modlar": ["dtn"],
         "komut": "python3 {kok}/dtn_yapilandirma/takvim_yukle.py --takvim {takvim} --t0 {t0}"
