@@ -1,5 +1,5 @@
 {
-  "_aciklama": "Asıl deney ortamı: Elif'in main'e birleşen Docker Compose düzeni (dunya, aktarici, arac). Koşturucu host'ta (netem testini geçen Mac'te) çalışır ve konteynerlere docker exec ile komut verir. Ağ adresleri Elif'in Compose yapılandırmasına göre doğrulanmıştır. Ayrıntılar: docs/ortam_ayarlari.md",
+  "_aciklama": "Asıl deney ortamı: main'e birleşen Elif/Azra Docker Compose ve µD3TN yapılandırması (dunya, aktarici, arac). Koşturucu host'ta çalışır ve konteynerlere docker exec ile komut verir. Doğrulanmış ayarlar: docs/ortam_ayarlari.md",
   "ad": "docker",
   "python": "python3",
   "proje_kok": "/proje",
@@ -23,7 +23,7 @@
     "gonderici_ek_argumanlar": []
   },
   "dtn": {
-    "_aciklama": "AAP2 her konteyner içinde 127.0.0.1:4242'de dinler. Trafik istemcileri docker exec ile aynı konteynerde çalışır; takvim yükleyicisi host'tan docker exec <dugum> aap2-config --tcp 127.0.0.1 4242 çağırır.",
+    "_aciklama": "AAP2 her µD3TN konteynerinde 127.0.0.1:4242'de dinler; trafik istemcileri konteyner içinde docker exec ile çalışır.",
     "dunya_aap2": "127.0.0.1:4242",
     "aktarici_aap2": "127.0.0.1:4242",
     "arac_aap2": "127.0.0.1:4242",
@@ -43,6 +43,24 @@
         "komut": ["python3", "{kok}/ag/arayuz_dogrula.py", "--ortam", "{kok}/deney/ortam_docker.json"]
       },
       {
+        "_sira": "SIRA ÖNEMLİ: yeniden başlatma ve kontaklar netem'den ÖNCE gelir. Konteyneri yeniden başlatmak tc qdisc kurallarını siler; netem önce kurulursa DTN koşuları gecikmesiz ölçülür (test: g1 = 5 s iken 0,05 s ölçüldü).",
+        "_aciklama": "DTN koşularından önce µD3TN düğümlerini temiz başlatır (bellekteki bundle'lar ve kontaklar silinir). docker restart, koşturucunun hangi klasörden çalıştığına bağlı değildir; sleep, AAP2'nin açılmasını bekler.",
+        "modlar": ["dtn"],
+        "komut": ["sh", "-c", "docker restart dunya aktarici arac >/dev/null && sleep 3"],
+        "zaman_asimi_s": 120
+      },
+      {
+        "_aciklama": "Deney 1 (takvimsiz) DTN: takvim_yukle yalnızca Deney 2'de çalışır; kontak olmadan µD3TN bundle göndermez (test: teslim %0). Linkler hep açık olduğu için 24 saatlik kalıcı kontaklar: dunya -> aktarici (üzerinden arac'a ulaşılır) ve aktarici -> arac.",
+        "takvimli": false,
+        "modlar": ["dtn"],
+        "komut": ["docker", "exec", "dunya", "aap2-config", "--tcp", "127.0.0.1", "4242", "--schedule", "1", "86400", "1000000000", "-r", "dtn://arac.dtn/", "dtn://aktarici.dtn/", "mtcp:10.0.1.3:4225"]
+      },
+      {
+        "takvimli": false,
+        "modlar": ["dtn"],
+        "komut": ["docker", "exec", "aktarici", "aap2-config", "--tcp", "127.0.0.1", "4242", "--schedule", "1", "86400", "1000000000", "dtn://arac.dtn/", "mtcp:10.0.2.3:4226"]
+      },
+      {
         "_aciklama": "Deney 1 (takvimsiz): linkler hep açık, yalnızca gecikme. Her linkin iki ucuna da uygulanır.",
         "takvimli": false,
         "komut": "docker exec dunya tc qdisc replace dev {arayuz[dunya_link1]} root netem delay {g1_ms}ms limit 100000"
@@ -60,14 +78,7 @@
         "komut": "docker exec arac tc qdisc replace dev {arayuz[arac_link2]} root netem delay {g2_ms}ms limit 100000"
       },
       {
-        "_aciklama": "DOĞRULANDI (Azra, 19.11.2026): Her DTN koşusundan önce tüm düğümleri yeniden başlatır; Compose ile test edildi.",
-        "modlar": ["dtn"],
-        "komut": "docker compose restart dunya aktarici arac",
-        "zaman_asimi_s": 120
-      },
-      {
-        "_aciklama": "Azra'nın açık PR'ındaki takvim_yukle.py doğrulanıp düzeltildikten sonra etkinleştirilecek. Host'tan docker exec <dugum> aap2-config --tcp 127.0.0.1 4242 --schedule ... çağırmalı ve gerekli hedef NODE_ID/CLA_ADDR argümanlarını vermeli. Başlangıç ofseti komut çağrısına görelidir: START_OFFSET = t0 + baslangic_s - time.time(), DURATION = bitis_s - baslangic_s.",
-        "devre_disi": true,
+        "_aciklama": "DOĞRULANDI (Azra, 24.11.2026): Düzeltilmiş takvim_yukle.py takvim.csv kontaklarını AAP2 üzerinden yükler. d2_dtn_p20_t1 smoke koşusunda 50/50 bundle teslim edildi.",
         "takvimli": true,
         "modlar": ["dtn"],
         "komut": "python3 {kok}/dtn_yapilandirma/takvim_yukle.py --takvim {takvim} --t0 {t0}"
