@@ -18,7 +18,7 @@ sys.path.insert(0, str(KOK))
 
 from analiz import metrikler, pcap_okuyucu  # noqa: E402
 from deney import takvim  # noqa: E402
-from deney.run_experiment import kosulari_uret, sure_hesapla  # noqa: E402
+from deney.run_experiment import Kosturucu, kosulari_uret, sure_hesapla  # noqa: E402
 from trafik import ortak  # noqa: E402
 
 
@@ -107,6 +107,25 @@ class MatrisTesti(unittest.TestCase):
                                       {"en_az": 90, "gecikme_carpani": 4, "ek": 60}), 90)
         self.assertEqual(sure_hesapla({"g1": 1, "g2": 0.05, "pencere": 10, "bosluk": 10},
                                       {"periyot_carpani": 2, "ek": 15}), 95)
+
+
+class Aap2ErisimTesti(unittest.TestCase):
+    def test_unix_soketi_tercih_edilir(self):
+        self.assertEqual(Kosturucu._aap2_erisimi(
+            {"dunya_aap2_soket": "/tmp/dunya.aap2.socket"}, "dunya"),
+            ["--aap2-soket", "/tmp/dunya.aap2.socket"])
+
+    def test_tcp_uyumlulugu(self):
+        self.assertEqual(Kosturucu._aap2_erisimi(
+            {"arac_aap2": "127.0.0.1:4242"}, "arac"),
+            ["--aap2-tcp", "127.0.0.1:4242"])
+
+    def test_iki_tasima_birden_tanimlanamaz(self):
+        with self.assertRaisesRegex(ValueError, "yalnızca biri"):
+            Kosturucu._aap2_erisimi({
+                "dunya_aap2": "127.0.0.1:4242",
+                "dunya_aap2_soket": "/tmp/dunya.aap2.socket",
+            }, "dunya")
 
 
 def _ethernet_tcp(yuk: int) -> bytes:

@@ -1,11 +1,12 @@
 {
-  "_aciklama": "Asıl deney ortamı: Elif'in Docker Compose düzeni (dunya, aktarici, arac). Koşturucu host'ta (netem testini geçen Mac'te) çalışır ve konteynerlere docker exec ile komut verir. 'BAKILACAK' ile işaretli değerler Elif ve Azra'nın kurulumuna göre doğrulanmalıdır. Ayrıntılar: docs/ortam_ayarlari.md",
+  "_aciklama": "Asıl deney ortamı: main'e birleşen Elif/Azra Docker Compose ve µD3TN yapılandırması (dunya, aktarici, arac). Koşturucu host'ta çalışır ve konteynerlere docker exec ile komut verir. Doğrulanmış ayarlar: docs/ortam_ayarlari.md",
   "ad": "docker",
   "python": "python3",
   "proje_kok": "/proje",
   "baslama_payi_s": 10,
   "dugumler": {
     "dunya": {"komut_oneki": ["docker", "exec", "dunya"]},
+    "aktarici": {"komut_oneki": ["docker", "exec", "aktarici"]},
     "arac": {"komut_oneki": ["docker", "exec", "arac"]}
   },
   "arayuzler": {
@@ -22,9 +23,10 @@
     "gonderici_ek_argumanlar": []
   },
   "dtn": {
-    "_aciklama": "BAKILACAK (Azra): her düğümün AAP2 portu ve aracın düğüm EID'si.",
-    "dunya_aap2": "localhost:4242",
-    "arac_aap2": "localhost:4242",
+    "_aciklama": "AAP2 her µD3TN konteynerinde 127.0.0.1:4242'de dinler; trafik istemcileri konteyner içinde docker exec ile çalışır.",
+    "dunya_aap2": "127.0.0.1:4242",
+    "aktarici_aap2": "127.0.0.1:4242",
+    "arac_aap2": "127.0.0.1:4242",
     "hedef_eid": "dtn://arac.dtn/sink",
     "ajan_id": "sink"
   },
@@ -76,7 +78,7 @@
         "komut": "docker exec arac tc qdisc replace dev {arayuz[arac_link2]} root netem delay {g2_ms}ms limit 100000"
       },
       {
-        "_aciklama": "DOĞRULANDI (Azra, 24.11.2026): Deney 2 takvim.csv dosyasını µD3TN kontaklarına yükler. Gerçek d2_dtn_p20_t1 koşusunda başarıyla çalıştı.",
+        "_aciklama": "DOĞRULANDI (Azra, 24.11.2026): Düzeltilmiş takvim_yukle.py takvim.csv kontaklarını AAP2 üzerinden yükler. d2_dtn_p20_t1 smoke koşusunda 50/50 bundle teslim edildi.",
         "takvimli": true,
         "modlar": ["dtn"],
         "komut": "python3 {kok}/dtn_yapilandirma/takvim_yukle.py --takvim {takvim} --t0 {t0}"
