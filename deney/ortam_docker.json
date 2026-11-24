@@ -41,6 +41,24 @@
         "komut": ["python3", "{kok}/ag/arayuz_dogrula.py", "--ortam", "{kok}/deney/ortam_docker.json"]
       },
       {
+        "_sira": "SIRA ÖNEMLİ: yeniden başlatma ve kontaklar netem'den ÖNCE gelir. Konteyneri yeniden başlatmak tc qdisc kurallarını siler; netem önce kurulursa DTN koşuları gecikmesiz ölçülür (test: g1 = 5 s iken 0,05 s ölçüldü).",
+        "_aciklama": "DTN koşularından önce µD3TN düğümlerini temiz başlatır (bellekteki bundle'lar ve kontaklar silinir). docker restart, koşturucunun hangi klasörden çalıştığına bağlı değildir; sleep, AAP2'nin açılmasını bekler.",
+        "modlar": ["dtn"],
+        "komut": ["sh", "-c", "docker restart dunya aktarici arac >/dev/null && sleep 3"],
+        "zaman_asimi_s": 120
+      },
+      {
+        "_aciklama": "Deney 1 (takvimsiz) DTN: takvim_yukle yalnızca Deney 2'de çalışır; kontak olmadan µD3TN bundle göndermez (test: teslim %0). Linkler hep açık olduğu için 24 saatlik kalıcı kontaklar: dunya -> aktarici (üzerinden arac'a ulaşılır) ve aktarici -> arac.",
+        "takvimli": false,
+        "modlar": ["dtn"],
+        "komut": ["docker", "exec", "dunya", "aap2-config", "--tcp", "127.0.0.1", "4242", "--schedule", "1", "86400", "1000000000", "-r", "dtn://arac.dtn/", "dtn://aktarici.dtn/", "mtcp:10.0.1.3:4225"]
+      },
+      {
+        "takvimli": false,
+        "modlar": ["dtn"],
+        "komut": ["docker", "exec", "aktarici", "aap2-config", "--tcp", "127.0.0.1", "4242", "--schedule", "1", "86400", "1000000000", "dtn://arac.dtn/", "mtcp:10.0.2.3:4226"]
+      },
+      {
         "_aciklama": "Deney 1 (takvimsiz): linkler hep açık, yalnızca gecikme. Her linkin iki ucuna da uygulanır.",
         "takvimli": false,
         "komut": "docker exec dunya tc qdisc replace dev {arayuz[dunya_link1]} root netem delay {g1_ms}ms limit 100000"
@@ -56,13 +74,6 @@
       {
         "takvimli": false,
         "komut": "docker exec arac tc qdisc replace dev {arayuz[arac_link2]} root netem delay {g2_ms}ms limit 100000"
-      },
-      {
-        "_aciklama": "BAKILACAK (Azra): DTN koşularından önce uD3TN düğümlerini temiz başlat (önceki koşudan kalan bundle'lar silinsin). Komutu kendi kurulumuna göre yaz ve devre_disi'yi kaldır.",
-        "devre_disi": true,
-        "modlar": ["dtn"],
-        "komut": "docker compose restart dunya aktarici arac",
-        "zaman_asimi_s": 120
       },
       {
         "_aciklama": "BAKILACAK (Azra): Deney 2'de takvim.csv'yi uD3TN kontaklarına çeviren betik. Argüman adlarını kendi betiğine göre düzelt ve devre_disi'yi kaldır. {t0} mutlak başlangıç zamanıdır (Unix saniye).",
