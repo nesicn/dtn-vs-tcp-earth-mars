@@ -1,0 +1,24 @@
+{
+  "_aciklama": "A1: İki düğüm arasında tek bundle gönderim testi",
+  "deney": "a1",
+  "kisa_ad": "a1",
+  "modlar": ["dtn"],
+  "tekrar": 1,
+  "mesaj": {
+    "adet": 1,
+    "boyut": 1024,
+    "aralik": 0.1
+  },
+  "nokta_etiketi": "g{g1}",
+  "varsayilan": {
+    "g2": 0
+  },
+  "noktalar": [
+    {
+      "g1": 0
+    }
+  ],
+  "sure": {
+    "sabit": 20
+  }
+}
