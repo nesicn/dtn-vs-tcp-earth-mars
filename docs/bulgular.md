@@ -5,7 +5,7 @@ Final rapor ve sunum için ortak kaynak. Her bulgu ölçümle desteklenir; tek k
 güncellenmelidir.
 
 Ortam: üç düğümlü Docker topolojisi (`docker-compose.yml`), µD3TN v0.15.0, MTCP
-bağlantı katmanı, macOS + Colima. Son güncelleme: 24.11.2026 (Elif).
+bağlantı katmanı, macOS + Colima. Son güncelleme: 26.11.2026 (Elif), tam matris sonuçlarıyla.
 
 ---
 
@@ -74,19 +74,60 @@ Matris değiştirilmeden koşulur. 10 s pencerenin 5 tekrarındaki %100 / %38 da
 raporlanır; ortalamanın yanında dağılım da verilmelidir (iki tepeli sonuç ortalamayla
 özetlenirse yanıltıcı olur).
 
+### Tam matris sonucu (26.11.2026, `docs/sonuclar/`)
+
+| Pencere | TCP (5 tekrar) | DTN (5 tekrar) |
+| --- | --- | --- |
+| 10 s | hepsi %0 | 3× %100 (medyan ~18 s), 2× %38 (~20 s); ortalama %75 |
+| 20 s | hepsi %0 | hepsi %100, medyan 28,0–28,7 s |
+| 30 s | hepsi %0 | hepsi %100, medyan 38,2–38,7 s |
+
+Gecikmeler tasarımla uyumlu: mesajlar ilk 5 s'de gönderilir (ortalama ~2,5 s), link2
+10 / 20 / 30 s pencerede sırasıyla 20 / 30 / 40 s'de açılır.
+
 ---
 
-## Bulgu 2 (ön sonuç) — Linkler hep açıkken yüksek gecikmede DTN, TCP'den yavaş
+## Bulgu 2 — Linkler hep açıkken DTN'nin avantajı yok, TCP'den yavaş (Deney 1)
 
-| Koşu (Deney 1, g1 = 5 s) | Teslim | Medyan gecikme |
+Tam matris, her nokta 5 tekrar, medyan gecikme (aralık):
+
+| g1 | TCP | DTN |
 | --- | --- | --- |
-| DTN | %100 | 19,95 / 20,05 / 20,19 s |
-| TCP | %100 | 13,18 / 13,19 s |
+| 0,1 s | %100 · 0,15–0,16 s | %100 · 0,20 s |
+| 1 s | %100 · 1,06–1,15 s | %100 · 2,22–2,32 s |
+| 5 s | %100 · 13,1–13,4 s | %100 · 19,2–20,2 s |
+| 10 s | %100 · 28,0–28,3 s | %100 · 44,3–44,9 s |
+| 20 s | %100 · 57,8–58,3 s | %100 · 93,7–94,7 s |
+| 40 / 80 / 160 s | %0 | %0 |
 
-Tek koşular; tam matristen sonra doğrulanmalı. Olası açıklama: MTCP de TCP tabanlı ve
-iki atlamanın her birinde ayrı bağlantı kurulumu ve yavaş başlangıç ödeniyor. Uçtan uca
-yol açıkken DTN'nin avantajı yok; avantajı Deney 2'de (yol hiç açılmadığında) görülüyor:
-aynı takvimde TCP %0, DTN %100 (20 s pencere).
+DTN her noktada TCP'den yavaş. µD3TN'in MTCP katmanı da TCP tabanlı; iki atlamanın her
+birinde ayrı bağlantı kurulumu ve yavaş başlangıç ödeniyor, aktarıcıda depolama da ekleniyor.
+Uçtan uca yol açıkken DTN bir şey kazandırmıyor; avantajı yalnızca yol hiç açılmadığında
+(Deney 2) görülüyor.
+
+---
+
+## Bulgu 3 — TCP'nin sınırı bağlantı kurulumu (Deney 1, g1 ≥ 40 s)
+
+TCP iki farklı şekilde kopuyor (gönderici günlüklerinden):
+
+| g1 | Gidiş-dönüş | Ne oluyor |
+| --- | --- | --- |
+| 40 s | 80 s | Bağlantı kuruluyor, 46/50 mesaj gönderiliyor, ama mesajlar koşu süresi (220 s) içinde varmıyor; alıcı kapanınca `ECONNRESET`. Sınır: koşu süresi. |
+| 80 s | 160 s | Bağlantı hiç kurulamıyor: ~133 s sonra `ETIMEDOUT`. |
+| 160 s | 320 s | Aynı: ~132 s sonra `ETIMEDOUT`. |
+
+Açıklama: SYN'in ilk zaman aşımı 1 s (RFC 6298); Linux SYN'i varsayılan 6 kez tekrarlayıp
+yaklaşık 127 s sonra vazgeçer (`net.ipv4.tcp_syn_retries`). Gidiş-dönüş bundan uzunsa
+(g1 ≳ 64 s) TCP bağlantıyı **hiçbir zaman** kuramaz; daha kısa gecikmelerde kurar ama
+her gidiş-dönüş gecikmeye eklenir (g1 = 20 s'de medyan 58 s ≈ 1,5 gidiş-dönüş + iletim).
+
+DTN de g1 ≥ 40 s'de %0, çünkü MTCP bağlantısı da TCP: µD3TN aktarıcıya bağlanamadığı için
+bundle'lar Dünya düğümünde bekliyor. Bu, µD3TN'in TCP tabanlı katmanının bir sınırıdır,
+DTN mimarisinin değil (RFC 4838 TCP olmayan, bağlantısız katmanlara da izin verir).
+
+Not: Ön testlerde bir kez g1 = 20 s'de TCP ve DTN %0 çıkmıştı; tam matriste 10/10 koşu
+%100. O test uyku sorunlarının çözülmediği döneme denk geliyordu ve sonuçlarda kullanılmadı.
 
 ---
 
@@ -103,3 +144,5 @@ düzeltmeden sonra yeniden test edildi.
 | Deney 1'de µD3TN'e kontak tanımlanmıyordu | DTN teslim %0 | Takvimsiz DTN koşularına kalıcı kontaklar (PR #3) |
 | Yeniden başlatma kancası netem'den sonra çalışıyordu | g1 = 5 s'de DTN 0,05 s ölçüldü (netem silinmişti) | Sıra: yeniden başlatma → kontaklar → netem (PR #3) |
 | `takvim_yukle.py` hedef EID/CLA vermiyordu, süre ondalıklıydı | Her çağrıda `aap2-config` hatası | Azra düzeltti (PR #2) |
+| Mac pildeyken / kapak kapanınca uyudu | Aynı noktanın tekrarları tutmadı (ör. TCP g1 = 1 s'de 0/50) | Uykuyla çakışan koşular arşivlendi ve yeniden koşuldu; uzun koşular şarjda, kapak açık |
+| Ek yük grafiği 317.757 piksel genişlikteydi | Grafik kullanılamazdı | Etiket eksen koordinatına alındı (PR #7) |
