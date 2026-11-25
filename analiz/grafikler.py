@@ -259,8 +259,10 @@ def ek_yuk(g: pd.DataFrame, yol: Path, uyari: Optional[str]) -> Optional[Path]:
                     elinewidth=1, label=st["ad"], zorder=3)
         _dogrudan_etiket(ax, x, y, mod, dy=8 if mod == "tcp" else -8)
     ax.axhline(1.0, color=IKINCIL, linewidth=1, linestyle=":")
-    ax.text(ax.get_xlim()[0], 1.0, " yalnızca asıl veri = 1", fontsize=8, color=IKINCIL,
-            va="bottom")
+    # x eksen koordinatında (0 = sol kenar), y veri koordinatında. get_xlim() log ölçekten
+    # önce okunursa negatif olabiliyor; o zaman etiket çok uzağa düşüp resmi devleştiriyordu.
+    ax.text(0.01, 1.0, " yalnızca asıl veri = 1", fontsize=8, color=IKINCIL,
+            va="bottom", transform=ax.get_yaxis_transform())
     ax.set_xscale("log")
     ax.xaxis.set_major_formatter(FuncFormatter(_saniye_bicimi))
     ax.set_ylim(bottom=0)
