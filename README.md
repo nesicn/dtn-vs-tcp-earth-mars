@@ -14,6 +14,19 @@ dakika yerine saniyeler).
 | Deney 1 | TCP hangi gecikmede çalışamaz hale geliyor? | Linkler hep açık, Dünya–uydu gecikmesi 0,1 → 160 s |
 | Deney 2 | Uçtan uca yol hiç açık değilken ne oluyor? | Gecikme 1 s, iki linkin pencereleri hiç örtüşmüyor |
 
+## Sonuçlar
+
+Her iki deneyin tam matrisi koşuldu: **110 koşu** (Deney 1: 80, Deney 2: 30), 25–26
+Kasım 2026, tek makinede ve tek kod sürümünde (`git: f59902a`).
+
+- **Özet tablolar ve grafikler:** [`docs/sonuclar/`](docs/sonuclar/)
+- **Bulgular ve düzenekte bulunan sorunlar:** [`docs/bulgular.md`](docs/bulgular.md)
+
+Kısaca: uçtan uca yol sürekli açıkken (Deney 1) DTN'in bir üstünlüğü yok, her gecikmede
+TCP'den yavaş; g1 ≥ 40 s'de ikisi de hiçbir mesajı teslim edemiyor. DTN'in farkı yalnızca
+yol hiç açılmadığında (Deney 2) ortaya çıkıyor: TCP %0, DTN %38–%100. Ayrıntılar ve bu
+sonuçların nedenleri `docs/bulgular.md`'de.
+
 ## Klasör yapısı
 
 | Klasör | İçerik | Sorumlu |
@@ -22,9 +35,12 @@ dakika yerine saniyeler).
 | `deney/` | Deney koşturucu (`run_experiment.py`), ortam dosyaları, deney matrisleri, takvim üretici | Nesibe |
 | `analiz/` | Metrikler, pcap bayt sayımı, grafikler, Colab defteri, sentetik test verisi | Nesibe |
 | `testler/` | Birim ve uçtan uca testler, testler için µD3TN AAP 2.0 taklidi | Nesibe |
-| `docker-compose.yml`, ağ ve pencere betikleri | Topoloji, netem, `contact_controller.py` | Elif |
-| µD3TN Dockerfile ve yapılandırma | Düğümler, kontaklar, takvim yükleyici | Azra |
-| `docs/` | Ortam ayarları, GitHub kurulumu | Ortak |
+| `ag/`, `docker-compose.yml` | Topoloji, netem, `contact_controller.py`, `arayuz_dogrula.py` | Elif |
+| `dtn_yapilandirma/` | µD3TN imajı (`Dockerfile`) ve takvim yükleyici (`takvim_yukle.py`) | Azra |
+| `docs/` | Ortam ayarları, bulgular, sonuç özetleri | Ortak |
+
+`docker-compose.a1.yml` yalnızca iki düğümlü ilk DTN denemesi (A1) içindir; deneylerde
+kullanılmaz.
 
 ## Hızlı başlangıç (Windows, Mac veya Linux, Docker gerekmez)
 
@@ -141,13 +157,18 @@ en küçük ve en büyük; gecikme için koşu medyanlarının medyanı.
 
 ## Sınırlılıklar ve doğrulanmamış noktalar
 
-- Otomatik yazılım testleri yerelde ve µD3TN AAP2 taklidiyle çalışır. Gerçek üç düğümlü
-  µD3TN ve `netem` ortamında ilk smoke koşuları tamamlandı; tam deney matrisleri henüz
-  tamamlanmadı. Tek koşuluk sonuçlar nihai ölçüm olarak değerlendirilmemelidir.
-- Deney 2'nin 10 s pencere koşulunda bildirilen %38 DTN teslim oranının nedeni
-  incelenmektedir. Tam Deney 2 matrisi bu inceleme tamamlanana kadar bekletilmelidir.
-- µD3TN'in düğümler arası taşıma katmanları TCP tabanlıdır; çok yüksek gecikmede DTN
-  bağlantısı da TCP zaman aşımlarına takılabilir (yol haritası bölüm 2).
-- `testler/sahte_ud3tn.py` bir DTN uygulaması değildir, deneylerde kullanılmaz.
-- `netem`'in kapalı linkte düşürdüğü paketler `tcpdump` yakalamasında görünmeyebilir;
-  ek yük ölçümünün bu yönü Docker ortamında doğrulanmalı.
+- Tüm sonuçlar tek bir makinede (macOS + Colima) alındı. Başka bir donanımda, özellikle
+  zamanlamaya duyarlı Deney 2'de, sayılar değişebilir.
+- µD3TN'in düğümler arası taşıma katmanları TCP tabanlıdır (burada MTCP). Yüksek
+  gecikmede DTN bağlantısı da TCP zaman aşımına takılır: g1 ≥ 40 s'de teslim %0.
+  Bu µD3TN'in bu yapılandırmasının sınırıdır, DTN mimarisinin değil
+  (`docs/bulgular.md`, Bulgu 3).
+- MTCP'de bundle düzeyinde onay yoktur; kısa pencerelerde bundle kaybı görülür
+  (`docs/bulgular.md`, Bulgu 1). Onaylı TCPCLv3 katmanı denenmedi.
+- Ek yük oranı yalnızca teslimin gerçekleştiği noktalarda anlamlıdır. Teslim %0 olan
+  noktalarda oran 1'in altına düşer; bu ek yükün azaldığı anlamına gelmez, hatta
+  neredeyse hiç bayt geçmediği anlamına gelir. Grafik bu noktaları çizmez.
+- `netem`'in kapalı linkte düşürdüğü paketler aktarıcıdaki `tcpdump` yakalamasında
+  görünmeyebilir; Deney 2'nin ek yük sayıları bu etkiyi taşıyabilir.
+- `testler/sahte_ud3tn.py` bir DTN uygulaması değildir, deneylerde kullanılmaz;
+  otomatik testler yalnızca yazılım akışını doğrular, ölçüm üretmez.
